@@ -1,0 +1,62 @@
+package dev.xneednoname.cxnSkript.elements.expressions;
+
+import ch.njol.skript.lang.Expression;
+import de.cytooxien.realms.api.RealmInformationProvider;
+import org.bukkit.Bukkit;
+import org.bukkit.event.Event;
+import org.eclipse.jdt.annotation.Nullable;
+
+import ch.njol.skript.Skript;
+import ch.njol.skript.lang.SkriptParser;
+import ch.njol.skript.lang.util.SimpleExpression;
+import ch.njol.skript.lang.ExpressionType;
+import ch.njol.util.Kleenean;
+
+public class ExprBoostCount extends SimpleExpression<Integer> {
+
+    static {
+        Skript.registerExpression(
+                ExprBoostCount.class,
+                Integer.class,
+                ExpressionType.SIMPLE,
+                "[the] [realm's] boost count"
+        );
+    }
+
+    @Override
+    public boolean init(Expression<?>[] exprs, int matchedPattern, Kleenean isDelayed, SkriptParser.ParseResult parseResult) {
+        return true;
+    }
+
+    @Override
+    protected Integer @Nullable [] get(Event event) {
+        RealmInformationProvider provider = Bukkit.getServicesManager().load(RealmInformationProvider.class);
+        if (provider == null) {
+            Skript.warning("RealmInformationProvider service not available");
+            return null;
+        }
+
+        try {
+            int count = provider.boostCount(); // Using the direct int method
+            return new Integer[] { count };
+        } catch (Exception e) {
+            Skript.warning("Failed to get realm boost count: " + e.getMessage());
+            return null;
+        }
+    }
+
+    @Override
+    public boolean isSingle() {
+        return true;
+    }
+
+    @Override
+    public Class<? extends Integer> getReturnType() {
+        return Integer.class;
+    }
+
+    @Override
+    public String toString(@Nullable Event event, boolean debug) {
+        return "the realm's boost count";
+    }
+}

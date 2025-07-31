@@ -1,0 +1,4 @@
+name: CxnSkript
+version: '1.0-SNAPSHOT'
+main: dev.xneednoname.cxnSkript.CxnSkript
+api-version: '1.21'
