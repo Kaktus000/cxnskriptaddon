@@ -40,23 +40,13 @@
             <version>1.21.7-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
-        <!-- Option 1: JitPack (neueste Version direkt von GitHub) -->
         <dependency>
             <groupId>com.github.SkriptLang</groupId>
             <artifactId>Skript</artifactId>
             <version>2.12.0</version>
             <scope>provided</scope>
         </dependency>
-        <!-- Option 2: Fallback auf njol repo
-        <dependency>
-            <groupId>ch.njol</groupId>
-            <artifactId>skript</artifactId>
-            <version>2.8.7</version>
-            <scope>provided</scope>
-        </dependency>
-        -->
 
-        <!-- Eclipse JDT Annotations für @Nullable etc. -->
         <dependency>
             <groupId>org.eclipse.jdt</groupId>
             <artifactId>org.eclipse.jdt.annotation</artifactId>
@@ -124,7 +114,6 @@
                 </executions>
             </plugin>
 
-            <!-- Dependency Plugin für manuelles Download -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>
