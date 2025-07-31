@@ -1,2 +1,26 @@
-# cxnskriptaddon
-Ich will nen Cytooxien Skript addon machen aber ka ob ich durchziehe
+# CxnSkriptAddon
+
+Ein Skript-Addon für Cytooxien API Unterstützung, entwickelt für Skript.
+
+---
+
+## Projektstatus
+
+Ich möchte ein Cytooxien Skript-Addon erstellen, bin mir aber noch nicht sicher, ob ich das Projekt durchziehe.
+
+---
+
+## Bisherige Syntax
+
+Diese Syntax kannst du im Skript verwenden, um Boost-Counts von Realms und Spielern abzufragen:
+
+- `[the] [realm's] boost count`  
+  Gibt als Integer zurück, wie viele Boosts der Realm insgesamt hat.
+
+- `[the] boost count of %player%`  
+- `%player%'s boost count`  
+- `boost count of %player%`  
+
+  Diese Varianten geben zurück, wie oft ein Spieler den Realm geboostet hat.
+
+---
