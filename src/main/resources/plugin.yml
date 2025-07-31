@@ -1,4 +1,8 @@
 name: CxnSkript
-version: '1.0-SNAPSHOT'
-main: dev.xneednoname.cxnSkript.CxnSkript
-api-version: '1.21'
+version: 0.1-BETA
+main: dev.xneednoname.cxnskript.CxnSkript
+api-version: 1.21
+authors: [xneednoname]
+description: Cytooxien API Skript Support
+
+depend: [Skript]
