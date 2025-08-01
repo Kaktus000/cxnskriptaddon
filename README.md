@@ -23,4 +23,9 @@ Diese Syntax kannst du im Skript verwenden, um Boost-Counts von Realms und Spiel
 
   Diese Varianten geben zurück, wie oft ein Spieler den Realm geboostet hat.
 
+- `[the] realm's description`
+   Gibt die Beschreibung des Realms als String zurück (Änderbar)
+
+- `[the] realm['s] name`
+   Gibt den Namen des Realms als String zurück (Änderbar)
 ---

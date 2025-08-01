@@ -22,7 +22,7 @@ public class ExprRealmDescription extends SimpleExpression<String> {
                 ExprRealmDescription.class,
                 String.class,
                 ExpressionType.PROPERTY,
-                "[the] realm's description"
+                "[the] realm['s] description"
         );
     }
 
