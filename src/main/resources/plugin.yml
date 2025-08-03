@@ -1,5 +1,5 @@
 name: CxnSkript
-version: 0.2-BETA
+version: 1.0-Release
 main: dev.xneednoname.cxnSkript.CxnSkript
 api-version: 1.21
 authors: [xneednoname]
