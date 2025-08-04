@@ -1,38 +1,74 @@
 package dev.xneednoname.cxnSkript;
 
-
 import java.io.IOException;
-
 import de.cytooxien.realms.api.RealmInformationProvider;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.plugin.java.JavaPlugin;
-
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.URL;
 import ch.njol.skript.Skript;
 import ch.njol.skript.SkriptAddon;
 
-public class CxnSkript extends JavaPlugin {
+public class CxnSkript extends JavaPlugin implements Listener {
 
-    CxnSkript instance;
-    SkriptAddon addon;
+    private CxnSkript instance;
+    private SkriptAddon addon;
+    private String currentVersion;
+    private String latestVersion;
 
+    @Override
     public void onEnable() {
         instance = this;
         addon = Skript.registerAddon(this);
+        currentVersion = getDescription().getVersion();
+        Bukkit.getPluginManager().registerEvents(this, this);
+        checkForUpdates();
 
         try {
-            // Load ALL classes (including expressions) in one call
             addon.loadClasses("dev.xneednoname.cxnSkript", "elements");
             getLogger().info("CxnSkript loaded successfully!");
         } catch (IOException e) {
             getLogger().severe("Failed to load CxnSkript: " + e.getMessage());
             e.printStackTrace();
             Bukkit.getPluginManager().disablePlugin(this);
-            return;
         }
 
-        // Optional: Check if RealmInformationProvider exists
-        if(Bukkit.getServicesManager().load(RealmInformationProvider.class) == null) {
+        if (Bukkit.getServicesManager().load(RealmInformationProvider.class) == null) {
             getLogger().warning("RealmInformationProvider not found - boost counts will be unavailable");
+        }
+    }
+
+    private void checkForUpdates() {
+        Bukkit.getScheduler().runTaskAsynchronously(this, () -> {
+            try {
+                URL url = new URL("https://raw.githubusercontent.com/Kaktus000/cxnskriptaddon/main/src/plugin.yml");
+                BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream()));
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    if (line.startsWith("version:")) {
+                        latestVersion = line.split(":")[1].trim();
+                        break;
+                    }
+                }
+                reader.close();
+            } catch (Exception e) {
+                Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[CxnSkript] Update-Check fehlgeschlagen: " + e.getMessage());
+            }
+        });
+    }
+
+    @EventHandler
+    public void onPlayerJoin(PlayerJoinEvent event) {
+        Player player = event.getPlayer();
+        if (player.isOp() && latestVersion != null && !currentVersion.equals(latestVersion)) {
+            player.sendMessage(ChatColor.YELLOW + "[CxnSkript] Eine neue Version (" + latestVersion + ") ist verfügbar!");
+            player.sendMessage(ChatColor.GOLD + "Download: https://github.com/Kaktus000/cxnskriptaddon/releases");
         }
     }
 
