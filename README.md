@@ -28,11 +28,11 @@ Diese Syntax kannst du im Skript verwenden, um Boost-Counts von Realms und Spiel
 - `[the] realm['s] name`
    Gibt den Namen des Realms als String zurück (Änderbar)
 
-- "[the] cytooxien lang[uage] of player",
-- "%player%'s cytooxien lang[uage]"
+- `[the] cytooxien lang[uage] of player`
+- `%player%'s cytooxien lang[uage]`
   Gibt die Cytooxien Sprache eines Spielers zurück.
 
-- %player%'s [custom] tab[list] prefix / suffix
-- %player%'s [custom] chat prefix / suffix
+- `%player%'s [custom] tab[list] prefix / suffix`
+- `%player%'s [custom] chat prefix / suffix`
   Gibt den Tablist oder Chat Pre- oder Suffix eines Spielers zurück (Änderbar)
 ---
