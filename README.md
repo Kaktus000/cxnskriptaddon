@@ -5,8 +5,7 @@ Ein Skript-Addon für Cytooxien API Unterstützung, entwickelt für Skript.
 ---
 
 ## Projektstatus
-
-Ich möchte ein Cytooxien Skript-Addon erstellen, bin mir aber noch nicht sicher, ob ich das Projekt durchziehe.
+Einige Syntax Existiert noch nicht 100% der API nutzbar.
 
 ---
 
