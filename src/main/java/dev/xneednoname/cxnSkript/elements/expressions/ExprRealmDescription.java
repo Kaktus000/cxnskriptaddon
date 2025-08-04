@@ -17,6 +17,23 @@ import org.bukkit.event.Event;
 import org.eclipse.jdt.annotation.Nullable;
 
 public class ExprRealmDescription extends SimpleExpression<String> {
+
+    /**
+     * Ein universeller Serializer, der <#RRGGBB>-Hex-Farben und '&'-Zeichen erkennt.
+     * Dies wird verwendet, um den Text zu deserialisieren, den ein Skript-Nutzer eingibt.
+     * Das '§'-Zeichen wird von Minecrafts interner API erwartet.
+     */
+    private static final LegacyComponentSerializer SERIALIZER_TO_ADVENTURE = LegacyComponentSerializer.builder()
+            .hexColors() // Support für <#RRGGBB>
+            .character('&') // Support für '&'
+            .build();
+
+    /**
+     * Ein einfacher Legacy-Serializer, um einen String mit '§'-Farbcodes zu erstellen.
+     * Wird verwendet, wenn der Text an die Realms-API gesendet wird, da diese `§` erwartet.
+     */
+    private static final LegacyComponentSerializer SERIALIZER_TO_LEGACY_STRING = LegacyComponentSerializer.legacySection();
+
     static {
         Skript.registerExpression(
                 ExprRealmDescription.class,
@@ -43,7 +60,7 @@ public class ExprRealmDescription extends SimpleExpression<String> {
 
     @Override
     public String toString(@Nullable Event event, boolean debug) {
-        return "the realm name";
+        return "the realm description";
     }
 
     @Override
@@ -54,8 +71,19 @@ public class ExprRealmDescription extends SimpleExpression<String> {
             Skript.warning("RealmInformationProvider service not available");
             return null;
         }
-        String name = provider.description();
-        return new String[]{name};
+
+        // Schritt 1: Hole den rohen String von der API (er enthält wahrscheinlich §-Farbcodes)
+        String description = provider.description();
+
+        // Schritt 2: Deserialisiere den rohen String in eine Adventure Component
+        // Dies wandelt alle §-Codes und Hex-Codes korrekt in eine Komponente um.
+        Component component = SERIALIZER_TO_LEGACY_STRING.deserialize(description);
+
+        // Schritt 3: Serialisiere die Component zurück in einen String,
+        // der für Skript-Benutzer gut lesbar ist (mit '&' und <#...>).
+        String formattedDescription = SERIALIZER_TO_ADVENTURE.serialize(component);
+
+        return new String[]{formattedDescription};
     }
 
     @Override
@@ -74,14 +102,25 @@ public class ExprRealmDescription extends SimpleExpression<String> {
             return;
         }
 
-        String newName;
+        String newDescription;
         if (mode == Changer.ChangeMode.SET) {
-            newName = (String) delta[0];
+            newDescription = (String) delta[0];
         } else {
-            newName = "CxnSkriptAddon-Default Name";
+            newDescription = "CxnSkriptAddon-Default Description";
         }
 
-        Action<Void> action = provider.changeDescription(newName);
+        // Schritt 1: Deserialisiere den Skript-Eingabe-String in eine Adventure Component.
+        // Der SERIALIZER_TO_ADVENTURE verarbeitet dabei '&', '§' und Hex-Farben.
+        Component component = SERIALIZER_TO_ADVENTURE.deserialize(newDescription);
+
+        // Schritt 2: Serialisiere die Component zurück in einen einfachen String,
+        // der ausschließlich '§'-Zeichen für die Farbcodierung verwendet.
+        // Die Realms-API erwartet dieses Format in den meisten Fällen.
+        String legacyDescription = SERIALIZER_TO_LEGACY_STRING.serialize(component);
+
+        // Schritt 3: Sende den konvertierten, legacy-formatierten String an die API.
+        Action<Void> action = provider.changeDescription(legacyDescription);
+
         handleAction(action, "Failed to change realm description");
     }
 
