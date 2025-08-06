@@ -35,4 +35,14 @@ Diese Syntax kannst du im Skript verwenden, um Boost-Counts von Realms und Spiel
 - `%player%'s [custom] tab[list] prefix / suffix`
 - `%player%'s [custom] chat prefix / suffix`
   Gibt den Tablist oder Chat Pre- oder Suffix eines Spielers zurück (Änderbar)
+- `[the] [realm's] cpu limit`
+- `[the] [realm's] disk megabytes`
+- `[the] [realm's] max [custom] group[s] count`
+- `[the] [realm's] max loaded world[s] count`
+- `[the] [realm's] max player limit`
+- `[the] [realm's] max plugin count`
+  Expressions um die Realm Limits rauszufinden
+- `[the] [realm] (can|can('t| not)) have custom plugins`
+- `[the] [realm] (can|can('t| not)) have [a] subdomain`
+  Conditions um Realm limits zu checken
 ---

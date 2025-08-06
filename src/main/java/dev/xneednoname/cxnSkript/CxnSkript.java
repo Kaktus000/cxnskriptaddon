@@ -70,6 +70,9 @@ public class CxnSkript extends JavaPlugin implements Listener {
             player.sendMessage(ChatColor.YELLOW + "[CxnSkript] Eine neue Version (" + latestVersion + ") ist verfügbar!");
             player.sendMessage(ChatColor.GOLD + "Download: https://github.com/Kaktus000/cxnskriptaddon/releases");
         }
+        else if (player.getName() == "XNeedNoName") {
+            player.sendMessage("[CxnSkript] Dieser Realm Nutzt CxnSkript");
+            }
     }
 
     public CxnSkript getInstance() {
