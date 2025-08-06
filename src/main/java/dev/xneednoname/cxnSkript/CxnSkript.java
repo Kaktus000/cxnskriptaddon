@@ -26,7 +26,7 @@ public class CxnSkript extends JavaPlugin implements Listener {
     public void onEnable() {
         instance = this;
         addon = Skript.registerAddon(this);
-        currentVersion = getDescription().getVersion();
+        currentVersion = getPluginMeta().getVersion();
         Bukkit.getPluginManager().registerEvents(this, this);
         checkForUpdates();
 
@@ -47,7 +47,7 @@ public class CxnSkript extends JavaPlugin implements Listener {
     private void checkForUpdates() {
         Bukkit.getScheduler().runTaskAsynchronously(this, () -> {
             try {
-                URL url = new URL("https://raw.githubusercontent.com/Kaktus000/cxnskriptaddon/main/src/plugin.yml");
+                URL url = new URL("https://raw.githubusercontent.com/Kaktus000/cxnskriptaddon/d2e5606a08b9cbd3e885126e335aad5fe57ae26d/src/main/resources/plugin.yml");
                 BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream()));
                 String line;
                 while ((line = reader.readLine()) != null) {

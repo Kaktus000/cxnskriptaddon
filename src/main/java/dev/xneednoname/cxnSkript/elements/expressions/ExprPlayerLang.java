@@ -14,7 +14,7 @@ public class ExprPlayerLang extends SimplePropertyExpression<Player, String> {
                 ExprPlayerLang.class,
                 String.class,
                 ExpressionType.PROPERTY,
-                "[the] cytooxien lang[uage] of player",
+                "[the] cytooxien lang[uage] of %player%",
                 "%player%'s cytooxien lang[uage]"
         );
     }
