@@ -18,20 +18,11 @@ import org.eclipse.jdt.annotation.Nullable;
 
 public class ExprRealmDescription extends SimpleExpression<String> {
 
-    /**
-     * Ein universeller Serializer, der <#RRGGBB>-Hex-Farben und '&'-Zeichen erkennt.
-     * Dies wird verwendet, um den Text zu deserialisieren, den ein Skript-Nutzer eingibt.
-     * Das '§'-Zeichen wird von Minecrafts interner API erwartet.
-     */
     private static final LegacyComponentSerializer SERIALIZER_TO_ADVENTURE = LegacyComponentSerializer.builder()
-            .hexColors() // Support für <#RRGGBB>
-            .character('&') // Support für '&'
+            .hexColors()
+            .character('&')
             .build();
 
-    /**
-     * Ein einfacher Legacy-Serializer, um einen String mit '§'-Farbcodes zu erstellen.
-     * Wird verwendet, wenn der Text an die Realms-API gesendet wird, da diese `§` erwartet.
-     */
     private static final LegacyComponentSerializer SERIALIZER_TO_LEGACY_STRING = LegacyComponentSerializer.legacySection();
 
     static {
@@ -72,67 +63,63 @@ public class ExprRealmDescription extends SimpleExpression<String> {
             return null;
         }
 
-        // Schritt 1: Hole den rohen String von der API (er enthält wahrscheinlich §-Farbcodes)
-        String description = provider.description();
-
-        // Schritt 2: Deserialisiere den rohen String in eine Adventure Component
-        // Dies wandelt alle §-Codes und Hex-Codes korrekt in eine Komponente um.
-        Component component = SERIALIZER_TO_LEGACY_STRING.deserialize(description);
-
-        // Schritt 3: Serialisiere die Component zurück in einen String,
-        // der für Skript-Benutzer gut lesbar ist (mit '&' und <#...>).
-        String formattedDescription = SERIALIZER_TO_ADVENTURE.serialize(component);
-
-        return new String[]{formattedDescription};
+        try {
+            String description = provider.description();
+            Component component = SERIALIZER_TO_LEGACY_STRING.deserialize(description);
+            return new String[]{SERIALIZER_TO_ADVENTURE.serialize(component)};
+        } catch (Exception e) {
+            Skript.warning("Failed to get realm description: " + e.getMessage());
+            return null;
+        }
     }
 
     @Override
     public Class<?>[] acceptChange(final Changer.ChangeMode mode) {
-        if (mode == Changer.ChangeMode.SET) {
-            return CollectionUtils.array(String.class);
-        }
-        return null;
+        return mode == Changer.ChangeMode.SET ? CollectionUtils.array(String.class) : null;
     }
 
     @Override
     public void change(Event event, Object[] delta, Changer.ChangeMode mode) {
-        RealmInformationProvider provider = Bukkit.getServicesManager().load(RealmInformationProvider.class);
-        if (provider == null) {
-            Skript.warning("RealmInformationProvider service not available");
+        if (mode != Changer.ChangeMode.SET || delta == null || delta.length == 0 || !(delta[0] instanceof String)) {
             return;
         }
 
-        String newDescription;
-        if (mode == Changer.ChangeMode.SET) {
-            newDescription = (String) delta[0];
-        } else {
-            newDescription = "CxnSkriptAddon-Default Description";
-        }
-
-        // Schritt 1: Deserialisiere den Skript-Eingabe-String in eine Adventure Component.
-        // Der SERIALIZER_TO_ADVENTURE verarbeitet dabei '&', '§' und Hex-Farben.
-        Component component = SERIALIZER_TO_ADVENTURE.deserialize(newDescription);
-
-        // Schritt 2: Serialisiere die Component zurück in einen einfachen String,
-        // der ausschließlich '§'-Zeichen für die Farbcodierung verwendet.
-        // Die Realms-API erwartet dieses Format in den meisten Fällen.
-        String legacyDescription = SERIALIZER_TO_LEGACY_STRING.serialize(component);
-
-        // Schritt 3: Sende den konvertierten, legacy-formatierten String an die API.
-        Action<Void> action = provider.changeDescription(legacyDescription);
-
-        handleAction(action, "Failed to change realm description");
-    }
-
-    private void handleAction(Action<Void> action, String errorPrefix) {
-        if (action.rateLimited()) {
-            Skript.warning(errorPrefix + " (rate limited)");
+        String newDescription = (String) delta[0];
+        if (newDescription == null || newDescription.isEmpty()) {
             return;
         }
 
-        if (!action.success()) {
-            Throwable error = action.throwable();
-            Skript.warning(errorPrefix + (error != null ? ": " + error.getMessage() : ""));
-        }
+        // Async execution for rate-limited API call
+        Bukkit.getScheduler().runTaskAsynchronously(Bukkit.getPluginManager().getPlugin("CxnSkript"), () -> {
+            RealmInformationProvider provider = Bukkit.getServicesManager().load(RealmInformationProvider.class);
+            if (provider == null) {
+                Skript.warning("RealmInformationProvider service not available");
+                return;
+            }
+
+            try {
+                Component component = SERIALIZER_TO_ADVENTURE.deserialize(newDescription);
+                String legacyDescription = SERIALIZER_TO_LEGACY_STRING.serialize(component);
+                Action<Void> action = provider.changeDescription(legacyDescription);
+
+                // Handle result in main thread
+                Bukkit.getScheduler().runTask(Bukkit.getPluginManager().getPlugin("CxnSkript"), () -> {
+                    if (action.rateLimited()) {
+                        Skript.warning("Realm description update rate-limited! Try again later.");
+                        return;
+                    }
+
+                    if (!action.success()) {
+                        Throwable error = action.throwable();
+                        String errorMsg = error != null ? error.getMessage() : "Unknown error";
+                        Skript.warning("Failed to update realm description: " + errorMsg);
+                    }
+                });
+            } catch (Exception e) {
+                Bukkit.getScheduler().runTask(Bukkit.getPluginManager().getPlugin("CxnSkript"), () -> {
+                    Skript.warning("Error while updating realm description: " + e.getMessage());
+                });
+            }
+        });
     }
 }
