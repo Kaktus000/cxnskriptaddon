@@ -47,7 +47,7 @@ public class CxnSkript extends JavaPlugin implements Listener {
     private void checkForUpdates() {
         Bukkit.getScheduler().runTaskAsynchronously(this, () -> {
             try {
-                URL url = new URL("https://raw.githubusercontent.com/Kaktus000/cxnskriptaddon/d2e5606a08b9cbd3e885126e335aad5fe57ae26d/src/main/resources/plugin.yml");
+                URL url = new URL("https://raw.githubusercontent.com/Kaktus000/cxnskriptaddon/main/src/main/resources/plugin.yml");
                 BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream()));
                 String line;
                 while ((line = reader.readLine()) != null) {
@@ -70,7 +70,7 @@ public class CxnSkript extends JavaPlugin implements Listener {
             player.sendMessage(ChatColor.YELLOW + "[CxnSkript] Eine neue Version (" + latestVersion + ") ist verfügbar!");
             player.sendMessage(ChatColor.GOLD + "Download: https://github.com/Kaktus000/cxnskriptaddon/releases");
         }
-        else if (player.getName() == "XNeedNoName") {
+        else if (player.getName().equals("XNeedNoName")) {
             player.sendMessage("[CxnSkript] Dieser Realm Nutzt CxnSkript");
             }
     }
