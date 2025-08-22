@@ -16,7 +16,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.event.Event;
 import org.eclipse.jdt.annotation.Nullable;
 
-public class ExprRealmDescription extends SimpleExpression<String> {
+public class ExprRealmDescription extends SimpleExpression<Object> {
 
     private static final LegacyComponentSerializer SERIALIZER_TO_ADVENTURE = LegacyComponentSerializer.builder()
             .hexColors()
@@ -25,18 +25,23 @@ public class ExprRealmDescription extends SimpleExpression<String> {
 
     private static final LegacyComponentSerializer SERIALIZER_TO_LEGACY_STRING = LegacyComponentSerializer.legacySection();
 
+    private static final LegacyComponentSerializer SERIALIZER_TO_MINIMESSAGE = LegacyComponentSerializer.builder()
+            .hexColors()
+            .useUnusualXRepeatedCharacterHexFormat()
+            .build();
+
     static {
         Skript.registerExpression(
                 ExprRealmDescription.class,
-                String.class,
+                Object.class,
                 ExpressionType.PROPERTY,
                 "[the] realm['s] description"
         );
     }
 
     @Override
-    public Class<? extends String> getReturnType() {
-        return String.class;
+    public Class<?> getReturnType() {
+        return Object.class;
     }
 
     @Override
@@ -56,7 +61,7 @@ public class ExprRealmDescription extends SimpleExpression<String> {
 
     @Override
     @Nullable
-    protected String[] get(Event event) {
+    protected Object[] get(Event event) {
         RealmInformationProvider provider = Bukkit.getServicesManager().load(RealmInformationProvider.class);
         if (provider == null) {
             Skript.warning("RealmInformationProvider service not available");
@@ -66,28 +71,66 @@ public class ExprRealmDescription extends SimpleExpression<String> {
         try {
             String description = provider.description();
             Component component = SERIALIZER_TO_LEGACY_STRING.deserialize(description);
-            return new String[]{SERIALIZER_TO_ADVENTURE.serialize(component)};
+            // Konvertiere zu MiniMessage-Format (Skript native <#rrggbb>)
+            String miniMessageString = convertToMiniMessageFormat(component);
+            return new Object[]{miniMessageString};
         } catch (Exception e) {
             Skript.warning("Failed to get realm description: " + e.getMessage());
             return null;
         }
     }
 
+    /**
+     * Konvertiert eine Adventure-Komponente in MiniMessage-Format
+     */
+    private String convertToMiniMessageFormat(Component component) {
+        // Zuerst zu Legacy-Text mit ungewöhnlichem Hex-Format (MiniMessage-kompatibel)
+        String legacyText = SERIALIZER_TO_MINIMESSAGE.serialize(component);
+
+        // Ersetze &x&r&r&g&g&b&b durch <#rrggbb>
+        return legacyText.replaceAll("&x&([0-9A-Fa-f])&([0-9A-Fa-f])&([0-9A-Fa-f])&([0-9A-Fa-f])&([0-9A-Fa-f])&([0-9A-Fa-f])", "<#$1$2$3$4$5$6>");
+    }
+
+    /**
+     * Konvertiert MiniMessage-Format zurück zu Adventure-Komponente
+     */
+    private Component convertFromMiniMessageFormat(String miniMessageText) {
+        // Ersetze <#rrggbb> durch &x&r&r&g&g&b&b
+        String legacyText = miniMessageText.replaceAll("<#([0-9A-Fa-f]{6})>", "&x&$1&$2&$3&$4&$5&$6")
+                .replaceAll("<#([0-9A-Fa-f])([0-9A-Fa-f])([0-9A-Fa-f])([0-9A-Fa-f])([0-9A-Fa-f])([0-9A-Fa-f])>", "&x&$1&$2&$3&$4&$5&$6");
+
+        return SERIALIZER_TO_MINIMESSAGE.deserialize(legacyText);
+    }
+
     @Override
     public Class<?>[] acceptChange(final Changer.ChangeMode mode) {
-        return mode == Changer.ChangeMode.SET ? CollectionUtils.array(String.class) : null;
+        return mode == Changer.ChangeMode.SET ? CollectionUtils.array(Object.class) : null;
     }
 
     @Override
     public void change(Event event, Object[] delta, Changer.ChangeMode mode) {
-        if (mode != Changer.ChangeMode.SET || delta == null || delta.length == 0 || !(delta[0] instanceof String)) {
+        if (mode != Changer.ChangeMode.SET || delta == null || delta.length == 0 || delta[0] == null) {
             return;
         }
 
-        String newDescription = (String) delta[0];
-        if (newDescription == null || newDescription.isEmpty()) {
+        Component component = null;
+
+        if (delta[0] instanceof Component) {
+            component = (Component) delta[0];
+        } else if (delta[0] instanceof String) {
+            String newDescription = (String) delta[0];
+            if (newDescription.isEmpty()) {
+                return;
+            }
+            // Verwende MiniMessage-Format für die Eingabe
+            component = convertFromMiniMessageFormat(newDescription);
+        } else {
+            // Keine automatische Konvertierung mehr, da Converters deprecated
+            Skript.warning("Cannot convert " + delta[0].getClass().getSimpleName() + " to Component. Please use String or Component.");
             return;
         }
+
+        final Component finalComponent = component;
 
         // Async execution for rate-limited API call
         Bukkit.getScheduler().runTaskAsynchronously(Bukkit.getPluginManager().getPlugin("CxnSkript"), () -> {
@@ -98,8 +141,8 @@ public class ExprRealmDescription extends SimpleExpression<String> {
             }
 
             try {
-                Component component = SERIALIZER_TO_ADVENTURE.deserialize(newDescription);
-                String legacyDescription = SERIALIZER_TO_LEGACY_STRING.serialize(component);
+                // Konvertiere zurück zu Legacy-String für die API
+                String legacyDescription = SERIALIZER_TO_LEGACY_STRING.serialize(finalComponent);
                 Action<Void> action = provider.changeDescription(legacyDescription);
 
                 // Handle result in main thread

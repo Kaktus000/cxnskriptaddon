@@ -45,6 +45,9 @@ Diese Syntax kannst du im Skript verwenden, um Boost-Counts von Realms und Spiel
 - `[the] [realm] (can|can('t| not)) have custom plugins`
 - `[the] [realm] (can|can('t| not)) have [a] subdomain`
   Conditions um Realm limits zu checken
+- `[the] realm['s] subdomain`
+- `[the] subdomain of the realm`
+  Gibt die Subdomain des Realms zurück
 ---
 ### Neuer Typ: Groups
 Ein Group Element ist eine Realms Gruppe (Ein Rang)

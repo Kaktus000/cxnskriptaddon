@@ -1,8 +1,10 @@
 package dev.xneednoname.cxnSkript.elements.expressions;
 
 import ch.njol.skript.lang.Expression;
+import de.cytooxien.realms.api.Action;
 import de.cytooxien.realms.api.RealmInformationProvider;
-import de.cytooxien.realms.api.model.Limits;
+import de.cytooxien.realms.api.RealmPermissionProvider;
+import de.cytooxien.realms.api.model.Group;
 import org.bukkit.Bukkit;
 import org.bukkit.event.Event;
 import org.eclipse.jdt.annotation.Nullable;
@@ -13,14 +15,17 @@ import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.skript.lang.ExpressionType;
 import ch.njol.util.Kleenean;
 
-public class ExprMaxPlayerLimit extends SimpleExpression<Integer> {
+import java.util.List;
+
+public class ExprSubdomain extends SimpleExpression<String> {
 
     static {
         Skript.registerExpression(
-                ExprMaxPlayerLimit.class,
-                Integer.class,
+                ExprSubdomain.class,
+                String.class,
                 ExpressionType.SIMPLE,
-                "[the] [realm's] max player limit"
+                "[the] realm['s] subdomain",
+                "[the] subdomain of the realm"
         );
     }
 
@@ -30,7 +35,7 @@ public class ExprMaxPlayerLimit extends SimpleExpression<Integer> {
     }
 
     @Override
-    protected Integer @Nullable [] get(Event event) {
+    protected String @Nullable [] get(Event event) {
         RealmInformationProvider provider = Bukkit.getServicesManager().load(RealmInformationProvider.class);
         if (provider == null) {
             Skript.warning("RealmInformationProvider service not available");
@@ -38,10 +43,11 @@ public class ExprMaxPlayerLimit extends SimpleExpression<Integer> {
         }
 
         try {
-            Limits limits = provider.limits();
-            return new Integer[] { limits.maxPlayers() };
+            Action<String> action = provider.subdomain();
+            String subdomain = action.value();
+            return new String[] { subdomain };
         } catch (Exception e) {
-            Skript.warning("Failed to get realm player limit: " + e.getMessage());
+            Skript.warning("Failed to get realms subdomain: " + e.getMessage());
             return null;
         }
     }
@@ -52,12 +58,12 @@ public class ExprMaxPlayerLimit extends SimpleExpression<Integer> {
     }
 
     @Override
-    public Class<? extends Integer> getReturnType() {
-        return Integer.class;
+    public Class<? extends String> getReturnType() {
+        return String.class;
     }
 
     @Override
     public String toString(@Nullable Event event, boolean debug) {
-        return "the realm's max player count";
+        return "the realm's subdomain";
     }
 }
